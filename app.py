@@ -53,7 +53,6 @@ class MyFrame(wx.Frame):
 
         def OnListBox(self,event):
                 selName = self.bktList.GetStringSelection()
-                self.SetTitle(selName)
                 self.fileList.Set(gs.getobjects(selName))
 	
 	def Download(self,event):
@@ -71,6 +70,6 @@ class MyFrame(wx.Frame):
 
 
 app = wx.App(False)
-frame = MyFrame(None,'Text Edit')
+frame = MyFrame(None,'GSBrowser')
 app.MainLoop()
 

@@ -14,8 +14,8 @@ class BotoSettings(wx.Dialog):
 			botoFileSettings = open(self.botoPath.GetValue(),"r")
 			self.textControl.SetValue(botoFileSettings.read())
 			self.updateButton = wx.Button(self,id=-1,label="Update",size=(100,50),pos=wx.Point(10,160))
-			#self.updateButton.SetToolTip(wx.ToolTip("Click to update Boto config"))
-			#self.updateButton.Bind(wx.EVT_BUTTON,self.OnUpdate)
+			self.updateButton.SetToolTip(wx.ToolTip("Click to update Boto config"))
+			self.updateButton.Bind(wx.EVT_BUTTON,self.OnUpdate)
 		        self.Show(False)
 		def OnUpdate(self,event):
 			print "Heha"
@@ -31,6 +31,13 @@ class MyFrame(wx.Frame):
                 self.bktList.Bind(wx.EVT_LISTBOX,self.OnListBox)
                 self.fileList = wx.ListBox(choices=[],parent=self,style=wx.LC_REPORT|wx.SUNKEN_BORDER,size=(400,100),pos=wx.Point(200,0))
 		self.fileList.Bind(wx.EVT_LISTBOX,self.Download)
+		self.dirCtrl = wx.GenericDirCtrl(self,size=(200,200),pos=wx.Point(0,120))
+		self.dir_tree = self.dirCtrl.GetTreeCtrl()
+		self.dir_tree.SetWindowStyle(self.dir_tree.GetWindowStyle() | wx.TR_MULTIPLE)
+		self.uploadButton = wx.Button(self,label="Upload",size=(100,50),pos=wx.Point(250,200))
+		self.uploadButton.Bind(wx.EVT_BUTTON,self.OnUpload)
+		self.refreshButton = wx.Button(self,label="Refresh",size=(100,50),pos = wx.Point(250,270))
+		self.refreshButton.Bind(wx.EVT_BUTTON,self.OnRefresh)
 		self.CreateStatusBar() #Create a status bar
 
 		#Setting up the menu
@@ -61,9 +68,25 @@ class MyFrame(wx.Frame):
 		dlg = wx.DirDialog(self, message="Pick a directory")
 		dlg.ShowModal()
 		dirName = dlg.GetPath()
+		self.StatusBar.SetStatusText("Downloading...")
 		gs.downloadObject(bucketName,fileName,dirName)
+		self.StatusBar.SetStatusText("Done!")
 		dlg.Destroy()
+
+	def OnUpload(self,event):
+		print self.dirCtrl.GetFilePath()
+		bucketName = self.bktList.GetStringSelection()
+		fileName = self.dirCtrl.GetFilePath()
+		self.StatusBar.SetStatusText("Uploading...")
+		gs.uploadObjects(bucketName,[fileName])
+		self.StatusBar.SetStatusText("Done!")
+		#refresh
+		self.fileList.Set(gs.getobjects(bucketName))
 		
+	def OnRefresh(self,event):
+		self.bktList.Set(gs.getbuckets())
+		self.StatusBar.SetStatusText("Refreshing...")	
+	
 	def OnExit(self,event):
 		app.Exit()
 

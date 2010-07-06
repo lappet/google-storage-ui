@@ -37,4 +37,24 @@ def downloadObject(bucketname,objname,dest_dir):
 	tmp.seek(0)
 
 	dst_key.set_contents_from_file(tmp)
+
+def uploadObjects(bucketname,filenames):
+	for name in filenames:
+		src_uri = boto.storage_uri(name,"file")
+		dst_uri = boto.storage_uri(bucketname,"gs")
+
+		dst_key_name = dst_uri.object_name + os.sep + src_uri.object_name
+		new_dst_uri = dst_uri.clone_replace_name(dst_key_name)
+		
+		dst_key = new_dst_uri.new_key()
+		
+		src_key = src_uri.get_key()
+		
+		tmp = tempfile.TemporaryFile()
+		src_key.get_file(tmp)
+		tmp.seek(0)
+
+		dst_key.set_contents_from_file(tmp)
+		
+
 	

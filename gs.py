@@ -1,3 +1,4 @@
+#Code mostly from http://code.google.com/apis/storage/docs/gspythonlibrary.html
 import boto
 import os
 import tempfile

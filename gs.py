@@ -1,4 +1,3 @@
-#Code mostly from http://code.google.com/apis/storage/docs/gspythonlibrary.html
 import boto
 import os
 import tempfile
@@ -6,7 +5,7 @@ import tempfile
 config = boto.config
 
 
-def getBuckets():
+def getbuckets():
         uri = boto.storage_uri("","gs")
         buckets = uri.get_all_buckets()
         bucket_list = []
@@ -14,7 +13,7 @@ def getBuckets():
         	bucket_list.append(bucket.name)
         return bucket_list
 
-def getObjects(bucketname):
+def getobjects(bucketname):
         uri = boto.storage_uri(bucketname,"gs")
         objs = uri.get_bucket()
         file_list = []
@@ -39,7 +38,7 @@ def downloadObject(bucketname,objname,dest_dir):
 
 	dst_key.set_contents_from_file(tmp)
 
-def uploadObjects(bucketname,filenames):
+def uploadObject(bucketname,filenames):
 	for name in filenames:
 		src_uri = boto.storage_uri(name,"file")
 		dst_uri = boto.storage_uri(bucketname,"gs")
@@ -56,14 +55,6 @@ def uploadObjects(bucketname,filenames):
 		tmp.seek(0)
 
 		dst_key.set_contents_from_file(tmp)
-
-def deleteObject(bucketname, filename):
-	uri = boto.storage_uri(bucketname,"gs")
-	bkt = uri.get_bucket()	
-	if bkt:
-		for obj in bkt:
-			if obj.name == filename:
-				obj.delete()
-
+		
 
 	

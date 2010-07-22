@@ -40,7 +40,7 @@ class MyFrame(wx.Frame):
                 self.bktList.Bind(wx.EVT_LISTBOX,self.OnListBox)
                 self.fileList = wx.ListCtrl(parent=self,size=(400,100),pos=wx.Point(210,5))
 		self.fileList.InsertColumn(0,"Objects")
-		self.fileList.Bind(wx.EVT_LEFT_DOWN,self.Download)
+		self.fileList.Bind(wx.EVT_LIST_ITEM_SELECTED,self.Download)
 		self.fileList.Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK,self.OnRightClick)
 		self.dirCtrl = wx.GenericDirCtrl(self,size=(200,200),pos=wx.Point(5,120))
 		self.dir_tree = self.dirCtrl.GetTreeCtrl()
@@ -105,10 +105,7 @@ class MyFrame(wx.Frame):
 	
 	def Download(self,event):
 		bucketName = self.bktList.GetStringSelection()
-
-		index = self.fileList.GetNextItem(-1,wx.LIST_NEXT_ALL,wx.LIST_STATE_SELECTED)
-		print index
-		fileName = self.fileList.GetFocusedItem()
+		fileName = event.GetText()
 		print fileName
 		dlg = wx.DirDialog(self, message="Pick a directory")
 		if dlg.ShowModal() != wx.ID_CANCEL:		

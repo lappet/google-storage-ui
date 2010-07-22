@@ -6,7 +6,7 @@ import tempfile
 config = boto.config
 
 
-def getbuckets():
+def getBuckets():
         uri = boto.storage_uri("","gs")
         buckets = uri.get_all_buckets()
         bucket_list = []
@@ -14,7 +14,7 @@ def getbuckets():
         	bucket_list.append(bucket.name)
         return bucket_list
 
-def getobjects(bucketname):
+def getObjects(bucketname):
         uri = boto.storage_uri(bucketname,"gs")
         objs = uri.get_bucket()
         file_list = []
@@ -56,6 +56,14 @@ def uploadObjects(bucketname,filenames):
 		tmp.seek(0)
 
 		dst_key.set_contents_from_file(tmp)
-		
+
+def deleteObject(bucketname, filename):
+	uri = boto.storage_uri(bucketname,"gs")
+	bkt = uri.get_bucket()	
+	if bkt:
+		for obj in bkt:
+			if obj.name == filename:
+				obj.delete()
+
 
 	

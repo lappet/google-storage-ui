@@ -17,6 +17,7 @@ class BotoSettings(wx.Dialog):
 			self.botoPath.SetValue(path)
 
 			self.textControl = wx.TextCtrl(self, style = wx.TE_MULTILINE,size=(450,100),pos=wx.Point(0,40))
+						
 			botoFileSettings = open(self.botoPath.GetValue(),"r")
 			self.textControl.SetValue(botoFileSettings.read())
 
@@ -35,7 +36,7 @@ class MyFrame(wx.Frame):
 		#Initial stuff
 		wx.Frame.__init__(self,parent,title=title,size=(700,600))
                
-		self.bktList = wx.ListBox(choices=gs.getbuckets(),parent=self,style=wx.LC_REPORT|wx.SUNKEN_BORDER,size=(200,100),pos=wx.Point(5,5))
+		self.bktList = wx.ListBox(choices=gs.getBuckets(),parent=self,style=wx.LC_REPORT|wx.SUNKEN_BORDER,size=(200,100),pos=wx.Point(5,5))
                 self.bktList.Bind(wx.EVT_LISTBOX,self.OnListBox)
                 self.fileList = wx.ListCtrl(parent=self,size=(400,100),pos=wx.Point(210,5))
 		self.fileList.InsertColumn(0,"Objects")
@@ -49,6 +50,7 @@ class MyFrame(wx.Frame):
 		self.refreshButton = wx.Button(self,label="Refresh",size=(100,50),pos = wx.Point(250,270))
 		self.refreshButton.Bind(wx.EVT_BUTTON,self.OnRefresh)
 		self.CreateStatusBar() #Create a status bar
+        
 
 		#Setting up the menu
 		fileMenu = wx.Menu()
@@ -75,8 +77,8 @@ class MyFrame(wx.Frame):
 
         def OnListBox(self,event):
                 selName = self.bktList.GetStringSelection()
-                for x in gs.getobjects(selName): self.fileList.InsertStringItem(0,x)
-		#self.fileList.Set(gs.getobjects(selName))
+                for x in gs.getObjects(selName): self.fileList.InsertStringItem(0,x)
+		#self.fileList.Set(gs.getObjects(selName))
 
 	def OnRightClick(self,event):
 		selObj = event.GetText()
@@ -86,7 +88,8 @@ class MyFrame(wx.Frame):
 		self.Bind(wx.EVT_MENU,self.OnDelete,menuItem)
 		menuItem = popupMenu.Append(wx.ID_ANY,"Get Info","Get meta data")
 		self.Bind(wx.EVT_MENU,self.OnInfo,menuItem)
-		self.PopupMenu(popupMenu, event.GetPoint())
+		currentPosition = wx.Point(event.GetPoint().x+200,event.GetPoint().y)
+		self.PopupMenu(popupMenu, currentPosition)
 		popupMenu.Destroy()
 		print "You right clicked!"
 
@@ -94,11 +97,18 @@ class MyFrame(wx.Frame):
 		print "on info"
 	
 	def OnDelete(self,event):
-		print "delete"
+		 bucketName = self.bktList.GetStringSelection()
+                 fileName = self.fileList.GetFirstSelected()
+		 self.StatusBar.SetStatusText("Deleting object "+fileName+" in bucket "+bucketName)
+		 gs.deleteObject(bucketName,fileName)
+		 self.StatusBar.SetStatusText("Done!")	
 	
 	def Download(self,event):
 		bucketName = self.bktList.GetStringSelection()
-		fileName = self.fileList.GetFirstSelected()
+
+		index = self.fileList.GetNextItem(-1,wx.LIST_NEXT_ALL,wx.LIST_STATE_SELECTED)
+		print index
+		fileName = self.fileList.GetFocusedItem()
 		print fileName
 		dlg = wx.DirDialog(self, message="Pick a directory")
 		if dlg.ShowModal() != wx.ID_CANCEL:		
@@ -109,17 +119,17 @@ class MyFrame(wx.Frame):
 		dlg.Destroy()
 
 	def OnUpload(self,event):
-		print self.dirCtrl.GetFocusedItem()
+		print self.dirCtrl.GetFilePath()
 		bucketName = self.bktList.GetStringSelection()
 		fileName = self.dirCtrl.GetFilePath()
 		self.StatusBar.SetStatusText("Uploading...")
 		gs.uploadObjects(bucketName,[fileName])
 		self.StatusBar.SetStatusText("Done!")
 		#refresh
-		self.fileList.Set(gs.getobjects(bucketName))
+                self.fileList.InsertStringItem(0,bucketName)
 		
 	def OnRefresh(self,event):
-		self.bktList.Set(gs.getbuckets())
+		self.bktList.Set(gs.getBuckets())
 		self.StatusBar.SetStatusText("Refreshing...")	
 	
 	def OnExit(self,event):

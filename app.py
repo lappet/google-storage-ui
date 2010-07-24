@@ -3,6 +3,7 @@
 import wx
 import os
 import gs
+import helper
 
 class BotoSettings(wx.Dialog):
         	def __init__(self,parent,title):
@@ -37,22 +38,32 @@ class MyFrame(wx.Frame):
 		#Initial stuff
 		wx.Frame.__init__(self,parent,title=title,size=(700,600))
                
-		self.bktList = wx.ListBox(choices=gs.getBuckets(),parent=self,style=wx.LC_REPORT|wx.SUNKEN_BORDER,size=(200,100),pos=wx.Point(5,5))
-                self.bktList.Bind(wx.EVT_LISTBOX,self.OnListBox)
+		#The Bucket List
+		self.bktList = wx.ListCtrl(parent=self,style=wx.LC_REPORT|wx.SUNKEN_BORDER,size=(200,100),pos=wx.Point(5,5))
+                self.bktList.Bind(wx.EVT_LIST_ITEM_SELECTED,self.OnListBox)
+		self.bktList.Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK,self.OnRightClickForBucketList)
+		self.bktList.InsertColumn(0,"Buckets")
+		for x in gs.getBuckets(): self.bktList.InsertStringItem(0,x)
+
+		#The Object/File list 
                 self.fileList = wx.ListCtrl(parent=self,size=(400,100),pos=wx.Point(210,5))
 		self.fileList.InsertColumn(0,"Objects")
 		#self.fileList.Bind(wx.EVT_LIST_ITEM_SELECTED,self.Download)
-		self.fileList.Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK,self.OnRightClick)
+		self.fileList.Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK,self.OnRightClickForObjectList)
+
+		#The Local Directory structure
 		self.dirCtrl = wx.GenericDirCtrl(self,size=(200,200),pos=wx.Point(5,120))
 		self.dir_tree = self.dirCtrl.GetTreeCtrl()
-		self.dir_tree.SetWindowStyle(self.dir_tree.GetWindowStyle() | wx.TR_MULTIPLE)
+		self.dir_tree.SetWindowStyle(self.dir_tree.GetWindowStyle() | wx.TR_MULTIPLE) #TR_MULTIPLE for multiple selections
+
+		#Upload & Refresh Buttons
 		self.uploadButton = wx.Button(self,label="Upload",size=(100,50),pos=wx.Point(250,200))
 		self.uploadButton.Bind(wx.EVT_BUTTON,self.OnUpload)
 		self.refreshButton = wx.Button(self,label="Refresh",size=(100,50),pos = wx.Point(250,270))
 		self.refreshButton.Bind(wx.EVT_BUTTON,self.OnRefresh)
+
 		self.CreateStatusBar() #Create a status bar
         
-
 		#Setting up the menu
 		fileMenu = wx.Menu()
 		menuItem = fileMenu.Append(wx.ID_ANY,"Boto&Settings","View/Modify BotoSettings")
@@ -88,19 +99,26 @@ class MyFrame(wx.Frame):
 
 
 	def OnAbout(self,event):
+		"""Shows the About dialog which for now is just a stupid MessageBox"""
 		wx.MessageBox("GSBrowser\n---------\nCode in wxPython\n---------\nR Raviprakash","About")
 
         def OnBoto(self,event):
+		"""Shows the BotoSettings dialog"""
                 self.botoFrame.Show(True)
 
         def OnListBox(self,event):
-                selName = self.bktList.GetStringSelection()
+		"""Handles the selection of a bucket in the bucket list"""
+                selName = self.GetSelectedItems(self.bktList)[0]
                 self.fileList.ClearAll()
                 for x in gs.getObjects(selName): self.fileList.InsertStringItem(0,x)
 		#self.fileList.Set(gs.getObjects(selName))
 
-	def OnRightClick(self,event):
-		#selectedObjText = event.GetText()
+	def OnRightClickForBucketList(self,event):
+		print event.GetText()
+
+
+	def OnRightClickForObjectList(self,event):
+		"""Handles RightClick for the object list"""
 		selectedItems =  self.GetSelectedItems(self.fileList)
 		popupMenu = wx.Menu()        
 		menuItem = popupMenu.Append(wx.ID_ANY,"Download","Download this object")	    
@@ -121,7 +139,7 @@ class MyFrame(wx.Frame):
 		 msgBox = wx.MessageDialog(self,"Are you sure you want to delete these object(s)?\n"+helper.list2str(fileNameList),"GS",wx.YES_NO)
 		 if msgBox.ShowModal() == wx.ID_NO:
 			return
-		 bucketName = self.bktList.GetStringSelection()
+		 bucketName = self.GetSelectedItems(self.bktList)[0]
 		 self.StatusBar.SetStatusText("Deleting object "+str(fileNameList)+" in bucket "+bucketName)
 		 gs.deleteObjects(bucketName,fileNameList)
 		 self.StatusBar.SetStatusText("Updating...")
@@ -129,7 +147,7 @@ class MyFrame(wx.Frame):
 		 self.StatusBar.SetStatusText("Done!")	
 		
 	def Download(self,event,fileNameList):
-		bucketName = self.bktList.GetStringSelection()
+		bucketName = self.GetSelectedItems(self.bktList)[0]
 		dlg = wx.DirDialog(self, message="Pick a directory")
 		if dlg.ShowModal() != wx.ID_CANCEL:		
 			dirName = dlg.GetPath()
@@ -139,18 +157,24 @@ class MyFrame(wx.Frame):
 		dlg.Destroy()
 
 	def OnUpload(self,event):
-		path = self.dirCtrl.GetFilePath()
-		print path, type(path)
-		bucketName = self.bktList.GetStringSelection()
-		fileName = self.dirCtrl.GetFilePath()
+		selections = self.dir_tree.GetSelections()
+		filesToUpload = []
+		for item in selections:
+			k = self.dir_tree.GetItemData(item)
+			print "Text:", self.dir_tree.GetItemText(item)
+		        path= self.dirCtrl.GetDirItemData(item).m_path
+			print path
+			filesToUpload.append(path)
+		bucketName = self.GetSelectedItems(self.bktList)[0]
 		self.StatusBar.SetStatusText("Uploading...")
-		gs.uploadObject(bucketName,[fileName])
+		gs.uploadObject(bucketName,filesToUpload)
 		self.StatusBar.SetStatusText("Done!")
 		#refresh
-                self.fileList.InsertStringItem(0,os.path.basename(path))
+                self.OnListBox(event)
 		
 	def OnRefresh(self,event):
-		self.bktList.Set(gs.getBuckets())		
+		self.bktList.ClearAll()
+		for x in gs.getBuckets(): self.bktList.InsertStringItem(0,x)
 		self.StatusBar.SetStatusText("Refreshing...")	
 		self.fileList.ClearAll()
 	

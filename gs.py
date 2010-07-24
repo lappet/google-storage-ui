@@ -1,6 +1,7 @@
 import boto
 import os
 import tempfile
+import helper
 
 config = boto.config #Yet to figure out what this does!
 
@@ -45,7 +46,7 @@ def downloadObjects(bucketname,objnames,dest_dir):
 def uploadObject(bucketname,filenames):
         """upload(s) all given files into the specified bucket"""
 	for name in filenames:
-		fname =  os.path.basename(name) #name is actually the path, os.path.basename() gets just the filename
+		fname =  helper.getFilenameFromPath(name) #name is actually the path, the helper function gets just the filename
 		src_uri = boto.storage_uri(name,"file")
 		dst_uri = boto.storage_uri(bucketname,"gs")
 

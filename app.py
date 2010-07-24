@@ -3,7 +3,6 @@
 import wx
 import os
 import gs
-import helper
 
 class BotoSettings(wx.Dialog):
         	def __init__(self,parent,title):

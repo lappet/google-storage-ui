@@ -3,6 +3,7 @@
 import wx
 import os
 import gs
+import helper
 
 class BotoSettings(wx.Dialog):
         	def __init__(self,parent,title):
@@ -70,25 +71,43 @@ class MyFrame(wx.Frame):
 		
 		self.Show(True)
 
+	def GetSelectedItems(self,listCtrl):
+		"""    Gets the selected items for the list control.
+		Selection is returned as a list of selected indices,
+		low to high. This function is taken from http://ginstrom.com/scribbles/2008/09/14/getting-selected-items-from-a-listctrl-in-wxpython/		"""
+		selection = []
+		index = listCtrl.GetFirstSelected()
+		selection.append(index)
+		while len(selection) != listCtrl.GetSelectedItemCount():
+		  index = listCtrl.GetNextSelected(index)
+		  selection.append(index)
+		names = []
+		for index in selection:
+			item = listCtrl.GetItem(index,0)
+			names.append(item.GetText())
+		return names
+
+
 	def OnAbout(self,event):
-		wx.MessageBox("GSBrowser\nCode in wxPython\nR Raviprakash","About")
+		wx.MessageBox("GSBrowser\n---------\nCode in wxPython\n---------\nR Raviprakash","About")
 
         def OnBoto(self,event):
                 self.botoFrame.Show(True)
 
         def OnListBox(self,event):
                 selName = self.bktList.GetStringSelection()
+                self.fileList.ClearAll()
                 for x in gs.getObjects(selName): self.fileList.InsertStringItem(0,x)
 		#self.fileList.Set(gs.getObjects(selName))
 
 	def OnRightClick(self,event):
-		selectedObjText = event.GetText()
-		print selectedObjText
+		#selectedObjText = event.GetText()
+		selectedItems =  self.GetSelectedItems(self.fileList)
 		popupMenu = wx.Menu()        
 		menuItem = popupMenu.Append(wx.ID_ANY,"Download","Download this object")	    
-	        self.Bind(wx.EVT_MENU,lambda evt, temp=selectedObjText: self.Download(evt, temp),menuItem)
+	        self.Bind(wx.EVT_MENU,lambda evt, temp=selectedItems: self.Download(evt, temp),menuItem)
 	        menuItem = popupMenu.Append(wx.ID_ANY,"Delete","Delete this object")
-	        self.Bind(wx.EVT_MENU,lambda evt, temp=selectedObjText: self.OnDelete(evt, temp),menuItem)
+	        self.Bind(wx.EVT_MENU,lambda evt, temp=selectedItems: self.OnDelete(evt, temp),menuItem)
 		menuItem = popupMenu.Append(wx.ID_ANY,"Get Info","Get meta data")
 		self.Bind(wx.EVT_MENU,self.OnInfo,menuItem)
 		currentPosition = wx.Point(event.GetPoint().x+200,event.GetPoint().y)
@@ -99,21 +118,24 @@ class MyFrame(wx.Frame):
 	def OnInfo(self,event):
 		print "on info"
 	
-	def OnDelete(self,event,fileName):
+	def OnDelete(self,event,fileNameList):
+		 msgBox = wx.MessageDialog(self,"Are you sure you want to delete these object(s)?\n"+helper.list2str(fileNameList),"GS",wx.YES_NO)
+		 if msgBox.ShowModal() == wx.ID_NO:
+			return
 		 bucketName = self.bktList.GetStringSelection()
-		 self.StatusBar.SetStatusText("Deleting object "+fileName+" in bucket "+bucketName)
-		 gs.deleteObject(bucketName,fileName)
+		 self.StatusBar.SetStatusText("Deleting object "+str(fileNameList)+" in bucket "+bucketName)
+		 gs.deleteObjects(bucketName,fileNameList)
+		 self.StatusBar.SetStatusText("Updating...")
+		 self.OnListBox(event) #refresh
 		 self.StatusBar.SetStatusText("Done!")	
-	
-	def Download(self,event,objName):
+		
+	def Download(self,event,fileNameList):
 		bucketName = self.bktList.GetStringSelection()
-		fileName = objName
-		print fileName
 		dlg = wx.DirDialog(self, message="Pick a directory")
 		if dlg.ShowModal() != wx.ID_CANCEL:		
 			dirName = dlg.GetPath()
 			self.StatusBar.SetStatusText("Downloading...")
-			gs.downloadObject(bucketName,fileName,dirName)
+			gs.downloadObjects(bucketName,fileNameList,dirName)
 			self.StatusBar.SetStatusText("Done!")
 		dlg.Destroy()
 
@@ -126,11 +148,12 @@ class MyFrame(wx.Frame):
 		gs.uploadObject(bucketName,[fileName])
 		self.StatusBar.SetStatusText("Done!")
 		#refresh
-                self.fileList.InsertStringItem(0,bucketName)
+                self.fileList.InsertStringItem(0,os.path.basename(path))
 		
 	def OnRefresh(self,event):
-		self.bktList.Set(gs.getBuckets())
+		self.bktList.Set(gs.getBuckets())		
 		self.StatusBar.SetStatusText("Refreshing...")	
+		self.fileList.ClearAll()
 	
 	def OnExit(self,event):
 		app.Exit()

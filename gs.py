@@ -23,30 +23,11 @@ def getObjects(bucketname):
                 file_list.append(obj.name)
         return file_list
 
-def downloadObject(bucketname,objname,dest_dir):
+def downloadObjects(bucketname,objnames,dest_dir):
 	"""Download a specific object from an exising bucket into a specified directory"""
-	src_uri = boto.storage_uri(bucketname+"/"+objname,"gs")
-	dst_uri = boto.storage_uri(dest_dir,"file")
-
-	dst_key_name = dst_uri.object_name + os.sep + src_uri.object_name
-	new_dst_uri = dst_uri.clone_replace_name(dst_key_name)
-	
-	dst_key = new_dst_uri.new_key()
-	
-	src_key = src_uri.get_key()
-	
-	tmp = tempfile.TemporaryFile()
-	src_key.get_file(tmp)
-	tmp.seek(0)
-
-	dst_key.set_contents_from_file(tmp)
-
-def uploadObject(bucketname,filenames):
-        """upload(s) all given files into the specified bucket"""
-	for name in filenames:
-		fname =  os.path.basename(name) #name is actually the path, os.path.basename() gets just the filename
-		src_uri = boto.storage_uri(fname,"file")
-		dst_uri = boto.storage_uri(bucketname,"gs")
+	for objname in objnames:
+		src_uri = boto.storage_uri(bucketname+"/"+objname,"gs")
+		dst_uri = boto.storage_uri(dest_dir,"file")
 
 		dst_key_name = dst_uri.object_name + os.sep + src_uri.object_name
 		new_dst_uri = dst_uri.clone_replace_name(dst_key_name)
@@ -60,6 +41,36 @@ def uploadObject(bucketname,filenames):
 		tmp.seek(0)
 
 		dst_key.set_contents_from_file(tmp)
+
+def uploadObject(bucketname,filenames):
+        """upload(s) all given files into the specified bucket"""
+	for name in filenames:
+		fname =  os.path.basename(name) #name is actually the path, os.path.basename() gets just the filename
+		src_uri = boto.storage_uri(name,"file")
+		dst_uri = boto.storage_uri(bucketname,"gs")
+
+		dst_key_name = dst_uri.object_name + os.sep + fname
+		new_dst_uri = dst_uri.clone_replace_name(dst_key_name)
+		
+		dst_key = new_dst_uri.new_key()
+		
+		src_key = src_uri.get_key()
+		
+		tmp = tempfile.TemporaryFile()
+		src_key.get_file(tmp)
+		tmp.seek(0)
+		dst_key.set_contents_from_file(tmp)
+		
+def deleteObjects(bucketname,filenames):
+		for filename in filenames:
+			uri = boto.storage_uri(bucketname,"gs")
+			objs = uri.get_bucket()
+			if objs:
+				for obj in objs:
+					if obj.name == filename:
+						obj.delete()
+		
+					
 		
 
 	

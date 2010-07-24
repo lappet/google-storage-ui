@@ -2,10 +2,11 @@ import boto
 import os
 import tempfile
 
-config = boto.config
+config = boto.config #Yet to figure out what this does!
 
 
-def getbuckets():
+def getBuckets():
+	"""Get all the buckets in your account"""
         uri = boto.storage_uri("","gs")
         buckets = uri.get_all_buckets()
         bucket_list = []
@@ -13,7 +14,8 @@ def getbuckets():
         	bucket_list.append(bucket.name)
         return bucket_list
 
-def getobjects(bucketname):
+def getObjects(bucketname):
+	"""Get objects in specified bucketname"""
         uri = boto.storage_uri(bucketname,"gs")
         objs = uri.get_bucket()
         file_list = []
@@ -22,6 +24,7 @@ def getobjects(bucketname):
         return file_list
 
 def downloadObject(bucketname,objname,dest_dir):
+	"""Download a specific object from an exising bucket into a specified directory"""
 	src_uri = boto.storage_uri(bucketname+"/"+objname,"gs")
 	dst_uri = boto.storage_uri(dest_dir,"file")
 
@@ -39,8 +42,10 @@ def downloadObject(bucketname,objname,dest_dir):
 	dst_key.set_contents_from_file(tmp)
 
 def uploadObject(bucketname,filenames):
+        """upload(s) all given files into the specified bucket"""
 	for name in filenames:
-		src_uri = boto.storage_uri(name,"file")
+		fname =  os.path.basename(name) #name is actually the path, os.path.basename() gets just the filename
+		src_uri = boto.storage_uri(fname,"file")
 		dst_uri = boto.storage_uri(bucketname,"gs")
 
 		dst_key_name = dst_uri.object_name + os.sep + src_uri.object_name

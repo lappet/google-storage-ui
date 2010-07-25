@@ -157,16 +157,26 @@ class MyFrame(wx.Frame):
 		dlg.Destroy()
 
 	def OnUpload(self,event):
+		bucketName = self.GetSelectedItems(self.bktList)[0]
 		selections = self.dir_tree.GetSelections()
 		filesToUpload = []
+		self.StatusBar.SetStatusText("Uploading...")
 		for item in selections:
 			k = self.dir_tree.GetItemData(item)
 			print "Text:", self.dir_tree.GetItemText(item)
 		        path= self.dirCtrl.GetDirItemData(item).m_path
 			print path
-			filesToUpload.append(path)
-		bucketName = self.GetSelectedItems(self.bktList)[0]
-		self.StatusBar.SetStatusText("Uploading...")
+			if os.path.isdir(path)==False:
+				filesToUpload.append(path)
+			else:
+				msgBox = wx.MessageDialog(self,"You have also selected a directory, do you want to upload its entire contents?","GS",wx.YES_NO)
+				if msgBox.ShowModal() == wx.ID_NO:
+					pass
+				else:
+					dirlist = []
+					for i in os.listdir(path):
+						dirlist.append(os.path.join(path,i))
+					gs.uploadObject(bucketName,dirlist)
 		gs.uploadObject(bucketName,filesToUpload)
 		self.StatusBar.SetStatusText("Done!")
 		#refresh

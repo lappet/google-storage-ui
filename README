@@ -3,7 +3,7 @@ A graphical user interface(GUI) for Google Storage written using the wxPython an
 Features:
 - Lists all buckets and objects in each bucket
 - Multiple downloads and deletions possible
-- Multiple uploading added! (of files only, cannot upload directories)
+- Multiple uploading added! (can upload directories too!)
 
 TODO:
 - Download entire buckets

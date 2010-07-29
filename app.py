@@ -4,6 +4,7 @@ import wx
 import os
 import gs
 import helper
+import pinger
 
 class BotoSettings(wx.Dialog):
         	def __init__(self,parent,title):
@@ -242,8 +243,12 @@ class MyFrame(wx.Frame):
 		app.Exit()
 
 
-
+status = pinger.ping()
 app = wx.App(False)
-frame = MyFrame(None,'GSBrowser')
-app.MainLoop()
+if status == 0:
+	wx.MessageBox("Sorry, net down, check your internet connection")
+	app.Exit()
+else:
+	frame = MyFrame(None,'GSBrowser')
+	app.MainLoop()
 

@@ -114,7 +114,32 @@ class MyFrame(wx.Frame):
 		#self.fileList.Set(gs.getObjects(selName))
 
 	def OnRightClickForBucketList(self,event):
+		"""Handles RightClick for the bucket list"""
+		popupMenu = wx.Menu()
+		menuItem = popupMenu.Append(wx.ID_ANY,"Create new bucket","Create a new bucket")
+		self.Bind(wx.EVT_MENU,self.CreateBucket)
+		menuItem = popupMenu.Append(wx.ID_ANY,"Delete this bucket","Delete this bucket")
+		self.Bind(wx.EVT_MENU,lambda evt, temp=event.GetText(): self.DeleteBucket(evt,temp),menuItem)
+		currentPosition = wx.Point(event.GetPoint().x,event.GetPoint().y)
+		self.PopupMenu(popupMenu, currentPosition)
+		popupMenu.Destroy()
 		print event.GetText()
+
+	def CreateBucket(self,event):
+		inputBox = wx.TextEntryDialog(self,"Enter the name of the bucket","GS")
+		if inputBox.ShowModal() == wx.ID_OK:
+			bucketName = inputBox.GetValue()
+			m = gs.createBucket(bucketName)
+			wx.MessageBox(str(m[0])+"\n"+str(m[1]),"Response")
+			for x in gs.getBuckets(): self.bktList.InsertStringItem(0,x)
+			
+
+	def DeleteBucket(self,event,bucketName):
+		k = wx.MessageDialog(self,"If the bucket is not empty, this will empty the contents of the bucket too. Are you sure you want to proceed?","GS",wx.YES_NO)
+		if k.ShowModal() == wx.ID_YES:
+			gs.deleteBucket(bucketName)
+			self.OnListBox(event)
+
 
 
 	def OnRightClickForObjectList(self,event):
@@ -152,8 +177,18 @@ class MyFrame(wx.Frame):
 		if dlg.ShowModal() != wx.ID_CANCEL:		
 			dirName = dlg.GetPath()
 			self.StatusBar.SetStatusText("Downloading...")
-			gs.downloadObjects(bucketName,fileNameList,dirName)
+			normalCursor = self.GetCursor()
+			busyCursor = wx.StockCursor(wx.CURSOR_WAIT)
+			self.SetCursor(busyCursor)
+			wx.Yield()
+			for fileName in fileNameList:
+				pdlg = wx.ProgressDialog(fileName,"FileDownload",maximum=gs.getObjectSize(bucketName,fileName))
+				pdlg.SetSize((400,100))
+				def update(m,n):
+					pdlg.Update(m,str(100*m/n)+ "% done")
+				gs.downloadObject(bucketName,fileName,dirName,update)
 			self.StatusBar.SetStatusText("Done!")
+			self.SetCursor(normalCursor)
 		dlg.Destroy()
 
 	def OnUpload(self,event):
@@ -161,24 +196,39 @@ class MyFrame(wx.Frame):
 		selections = self.dir_tree.GetSelections()
 		filesToUpload = []
 		self.StatusBar.SetStatusText("Uploading...")
+		normalCursor = self.GetCursor()
+		busyCursor = wx.StockCursor(wx.CURSOR_WAIT)
+		self.SetCursor(busyCursor)
 		for item in selections:
 			k = self.dir_tree.GetItemData(item)
 			print "Text:", self.dir_tree.GetItemText(item)
 		        path= self.dirCtrl.GetDirItemData(item).m_path
 			print path
-			if os.path.isdir(path)==False:
+			if os.path.isdir(path)==False: #if its not a directory, simply append the path
 				filesToUpload.append(path)
-			else:
+			else: #if its a directory, upload all the files in the directory
 				msgBox = wx.MessageDialog(self,"You have also selected a directory, do you want to upload its entire contents?","GS",wx.YES_NO)
 				if msgBox.ShowModal() == wx.ID_NO:
 					pass
-				else:
+				else: #user said Yes!
 					dirlist = []
 					for i in os.listdir(path):
 						dirlist.append(os.path.join(path,i))
-					gs.uploadObject(bucketName,dirlist)
-		gs.uploadObject(bucketName,filesToUpload)
+					for fname in dirlist:
+						pdlg = wx.ProgressDialog(fname,"FileUpload",maximum=os.path.getsize(fname))
+						pdlg.SetSize((400,100))
+						def update(m,n):
+							pdlg.Update(m,str(100*m/n)+ "% done")
+						gs.uploadObject(bucketName,fname,update)
+		for fname in filesToUpload:
+			pdlg = wx.ProgressDialog(fname,"FileUpload",maximum=os.path.getsize(fname))
+			pdlg.SetSize((400,100))
+			def update(m,n):
+				pdlg.Update(m,str(100*m/n)+ "% done")
+			gs.uploadObject(bucketName,fname,update)
 		self.StatusBar.SetStatusText("Done!")
+		self.SetCursor(normalCursor)
+		dlg.Destroy()
 		#refresh
                 self.OnListBox(event)
 		

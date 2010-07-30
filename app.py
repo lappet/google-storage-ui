@@ -4,7 +4,6 @@ import wx
 import os
 import gs
 import helper
-import pinger
 
 class BotoSettings(wx.Dialog):
         	def __init__(self,parent,title):
@@ -243,7 +242,7 @@ class MyFrame(wx.Frame):
 		app.Exit()
 
 
-status = pinger.ping()
+status = helper.ping()
 app = wx.App(False)
 if status == 0:
 	wx.MessageBox("Sorry, net down, check your internet connection")

@@ -10,7 +10,10 @@ Features:
 TODO:
 - Download entire buckets
 - Display information for each object
+- Only tested on Linux so far
 
 INSTRUCTIONS:
 - You should have Python, wxPython and the latest version of boto installed
 - Your Google Storage keys should be in a file named 'config' in the same directory as the application
+- app.py is the main application, launch it
+

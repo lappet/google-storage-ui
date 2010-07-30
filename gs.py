@@ -4,7 +4,7 @@ import os
 import tempfile
 import helper
 
-config = boto.config #Yet to figure out what this does!
+os.environ['BOTO_CONFIG'] = 'config'
 
 def callBack(trans,total):
 	print trans,total	

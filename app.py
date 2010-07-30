@@ -2,6 +2,7 @@
 #Raviprakash R <ravi87@gmail.com>
 import wx
 import os
+os.environ['BOTO_CONFIG'] = 'config'
 import gs
 import helper
 
@@ -15,7 +16,7 @@ class BotoSettings(wx.Dialog):
 		        
 			self.botoPath = wx.TextCtrl(self, pos=wx.Point(10,20),size=(200,20)) 
 			config = open("config","r")
-			path = config.readline().split(":")[1].strip()
+			path = config.readlines()
 			self.botoPath.SetValue(path)
 
 			self.textControl = wx.TextCtrl(self, style = wx.TE_MULTILINE,size=(450,100),pos=wx.Point(0,40))
@@ -34,7 +35,7 @@ class BotoSettings(wx.Dialog):
 
 class MyFrame(wx.Frame):
 	def __init__(self,parent,title):
-                self.botoFrame = BotoSettings(None,"BotoSettings")
+                #self.botoFrame = BotoSettings(None,"BotoSettings")
 		#Initial stuff
 		wx.Frame.__init__(self,parent,title=title,size=(700,600))
                
@@ -240,7 +241,6 @@ class MyFrame(wx.Frame):
 	
 	def OnExit(self,event):
 		app.Exit()
-
 
 status = helper.ping()
 app = wx.App(False)

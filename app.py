@@ -1,42 +1,62 @@
 #!/usr/bin/python
 #Raviprakash R <ravi87@gmail.com>
-import wx
+#The Main Application
 import os
 os.environ['BOTO_CONFIG'] = 'config'
+import sys
+
+import wx
+
 import gs
 import helper
 
+
 class BotoSettings(wx.Dialog):
-        	def __init__(self,parent,title):
-			"""This class is for the BotoSettings Dialog box. You can set the path of the boto.config file"""
-		        #Initial stuff
-		        wx.Dialog.__init__(self,parent,title=title,size=(500,250))
-			
-			self.label = wx.StaticText(self, -1, "BotoSettings",pos=wx.Point(10,0),size=(100,15))
-		        
-			self.botoPath = wx.TextCtrl(self, pos=wx.Point(10,20),size=(200,20)) 
-			config = open("config","r")
-			path = config.readlines()
-			self.botoPath.SetValue(path)
+	"""A Class for the boto config"""
 
-			self.textControl = wx.TextCtrl(self, style = wx.TE_MULTILINE,size=(450,100),pos=wx.Point(0,40))
-						
-			botoFileSettings = open(self.botoPath.GetValue(),"r")
-			self.textControl.SetValue(botoFileSettings.read())
+	def __init__(self,parent,title):
+		"""This class is for the BotoSettings Dialog box. You can set the path of the boto.config file"""
+		#Initial stuff
+		wx.Dialog.__init__(self,parent,title=title,size=(600,250))
+		self.Bind(wx.EVT_SHOW,self.OnShow)
+		self.botoPath = wx.TextCtrl(self, pos=wx.Point(10,20),size=(550,100),style=wx.TE_MULTILINE) 
+		self.LoadConfig()
+		
+		self.updateButton = wx.Button(self,id=-1,label="Update",size=(100,50),pos=wx.Point(10,160))
+		self.updateButton.SetToolTip(wx.ToolTip("Click to update Boto config"))
+		self.updateButton.Bind(wx.EVT_BUTTON,self.OnUpdate)
 
-			self.updateButton = wx.Button(self,id=-1,label="Update",size=(100,50),pos=wx.Point(10,160))
-			self.updateButton.SetToolTip(wx.ToolTip("Click to update Boto config"))
-			self.updateButton.Bind(wx.EVT_BUTTON,self.OnUpdate)
+		self.Show(False)
 
-		        self.Show(False)
-		def OnUpdate(self,event):
-			print "Heha"
+	def OnShow(self,event):
+		self.LoadConfig()
+		print "heha"
+	
+	def LoadConfig(self):
+		path = os.path.join(sys.path[0],"config")
+		config = open(path,"r")
+		data = config.read()
+		self.botoPath.SetValue(data)
+
+	def OnUpdate(self,event):
+		k = wx.MessageDialog(self,"If you select Yes, your config file will be modified, but you can see the impact only when you restart the application. Are you sure you want to proceed?","GS",wx.YES_NO)
+		if k.ShowModal() == wx.ID_YES:
+			print "Yes"
+			data = self.botoPath.GetValue()
+			path = os.path.join(sys.path[0],"config")
+			f = open(path,"w")
+			f.write(data)
+			self.Show(False)
+			self.LoadConfig()
+		else:
+			print "No"
 
 
 class MyFrame(wx.Frame):
+	"""The Class for the Main Application"""
 	def __init__(self,parent,title):
-                #self.botoFrame = BotoSettings(None,"BotoSettings")
 		#Initial stuff
+                self.botoFrame = BotoSettings(None,"BotoSettings")
 		wx.Frame.__init__(self,parent,title=title,size=(700,600))
                
 		#The Bucket List
@@ -44,12 +64,14 @@ class MyFrame(wx.Frame):
                 self.bktList.Bind(wx.EVT_LIST_ITEM_SELECTED,self.OnListBox)
 		self.bktList.Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK,self.OnRightClickForBucketList)
 		self.bktList.InsertColumn(0,"Buckets")
-		for x in gs.getBuckets(): self.bktList.InsertStringItem(0,x)
+		self.bkts = gs.getBuckets()
+		if self.bkts:
+			for x in self.bkts: self.bktList.InsertStringItem(0,x)
 
 		#The Object/File list 
                 self.fileList = wx.ListCtrl(parent=self,size=(400,100),pos=wx.Point(210,5))
 		self.fileList.InsertColumn(0,"Objects")
-		#self.fileList.Bind(wx.EVT_LIST_ITEM_SELECTED,self.Download)
+		#self.fileList.Bind(wx.EVT_LIST_ITEM_SELECTED,self.OnDownload)
 		self.fileList.Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK,self.OnRightClickForObjectList)
 
 		#The Local Directory structure
@@ -118,24 +140,26 @@ class MyFrame(wx.Frame):
 		"""Handles RightClick for the bucket list"""
 		popupMenu = wx.Menu()
 		menuItem = popupMenu.Append(wx.ID_ANY,"Create new bucket","Create a new bucket")
-		self.Bind(wx.EVT_MENU,self.CreateBucket)
+		self.Bind(wx.EVT_MENU,self.OnCreateBucket)
 		menuItem = popupMenu.Append(wx.ID_ANY,"Delete this bucket","Delete this bucket")
-		self.Bind(wx.EVT_MENU,lambda evt, temp=event.GetText(): self.DeleteBucket(evt,temp),menuItem)
+		self.Bind(wx.EVT_MENU,lambda evt, temp=event.GetText(): self.OnDeleteBucket(evt,temp),menuItem)
 		currentPosition = wx.Point(event.GetPoint().x,event.GetPoint().y)
 		self.PopupMenu(popupMenu, currentPosition)
 		popupMenu.Destroy()
 		print event.GetText()
 
-	def CreateBucket(self,event):
+	def OnCreateBucket(self,event):
 		inputBox = wx.TextEntryDialog(self,"Enter the name of the bucket","GS")
 		if inputBox.ShowModal() == wx.ID_OK:
 			bucketName = inputBox.GetValue()
 			m = gs.createBucket(bucketName)
 			wx.MessageBox(str(m[0])+"\n"+str(m[1]),"Response")
-			for x in gs.getBuckets(): self.bktList.InsertStringItem(0,x)
+			self.bkts = gs.getBuckets()
+			if self.bkts:		
+				for x in self.bkts: self.bktList.InsertStringItem(0,x)
 			
 
-	def DeleteBucket(self,event,bucketName):
+	def OnDeleteBucket(self,event,bucketName):
 		k = wx.MessageDialog(self,"If the bucket is not empty, this will empty the contents of the bucket too. Are you sure you want to proceed?","GS",wx.YES_NO)
 		if k.ShowModal() == wx.ID_YES:
 			gs.deleteBucket(bucketName)
@@ -148,7 +172,7 @@ class MyFrame(wx.Frame):
 		selectedItems =  self.GetSelectedItems(self.fileList)
 		popupMenu = wx.Menu()        
 		menuItem = popupMenu.Append(wx.ID_ANY,"Download","Download this object")	    
-	        self.Bind(wx.EVT_MENU,lambda evt, temp=selectedItems: self.Download(evt, temp),menuItem)
+	        self.Bind(wx.EVT_MENU,lambda evt, temp=selectedItems: self.OnDownload(evt, temp),menuItem)
 	        menuItem = popupMenu.Append(wx.ID_ANY,"Delete","Delete this object")
 	        self.Bind(wx.EVT_MENU,lambda evt, temp=selectedItems: self.OnDelete(evt, temp),menuItem)
 		menuItem = popupMenu.Append(wx.ID_ANY,"Get Info","Get meta data")
@@ -172,7 +196,7 @@ class MyFrame(wx.Frame):
 		 self.OnListBox(event) #refresh
 		 self.StatusBar.SetStatusText("Done!")	
 		
-	def Download(self,event,fileNameList):
+	def OnDownload(self,event,fileNameList):
 		bucketName = self.GetSelectedItems(self.bktList)[0]
 		dlg = wx.DirDialog(self, message="Pick a directory")
 		if dlg.ShowModal() != wx.ID_CANCEL:		
@@ -229,16 +253,13 @@ class MyFrame(wx.Frame):
 			gs.uploadObject(bucketName,fname,update)
 		self.StatusBar.SetStatusText("Done!")
 		self.SetCursor(normalCursor)
-		dlg.Destroy()
 		#refresh
                 self.OnListBox(event)
 		
 	def OnRefresh(self,event):
-		self.bktList.ClearAll()
-		for x in gs.getBuckets(): self.bktList.InsertStringItem(0,x)
-		self.StatusBar.SetStatusText("Refreshing...")	
-		self.fileList.ClearAll()
-	
+		self.fileList.DeleteAllItems()
+	        self.OnListBox(event)
+
 	def OnExit(self,event):
 		app.Exit()
 

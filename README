@@ -7,10 +7,11 @@ Features:
 - Deletion of objects and buckets
 - Creation of new buckets
 - Progress bars for upload & download
+
 TODO:
 - Download entire buckets
 - Display information for each object
-- Only tested on Linux so far
+- Only tested on Linux(Lucid Lynx) and Windows(Vista) so far
 
 INSTRUCTIONS:
 - You should have Python, wxPython and the latest version of boto installed

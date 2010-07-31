@@ -1,10 +1,9 @@
+#Google-Storage wrapper functions go here
 import boto
 from boto.exception import *
 import os
 import tempfile
 import helper
-
-os.environ['BOTO_CONFIG'] = 'config'
 
 def callBack(trans,total):
 	print trans,total	
@@ -33,12 +32,15 @@ def deleteBucket(bucketName):
 
 def getBuckets():
 	"""Get all the buckets in your account"""
-        uri = boto.storage_uri("","gs")
-        buckets = uri.get_all_buckets()
-        bucket_list = []
-        for bucket in buckets:
-        	bucket_list.append(bucket.name)
-        return bucket_list
+	try:
+		uri = boto.storage_uri("","gs")
+		buckets = uri.get_all_buckets()
+		bucket_list = []
+		for bucket in buckets:
+			bucket_list.append(bucket.name)
+		return bucket_list
+	except StandardError, e:
+		pass
 
 def getObjects(bucketname):
 	"""Get objects in specified bucketname"""

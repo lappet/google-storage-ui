@@ -1,4 +1,5 @@
 #Google-Storage wrapper functions go here
+#Code inspired from http://code.google.com/apis/storage/docs/gspythonlibrary.html
 import boto
 from boto.exception import *
 import os

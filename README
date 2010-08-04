@@ -9,11 +9,11 @@ Features:
 - Deletion of objects and buckets
 - Creation of new buckets
 - Progress bars for upload & download
+- Display information for each object
 
 TODO:
 - Download entire buckets
-- Display information for each object
-- Only tested on Linux(Lucid Lynx) and Windows(Vista) so far
+- Only tested on Linux(Lucid Lynx) and Windows(Vista) so far...any volunteers for other operating systems?
 - Get/Set ACLs
 - Add ability to Drag & Drop files
 

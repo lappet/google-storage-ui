@@ -1,6 +1,7 @@
 GSBrowser: A graphical user interface(GUI) for Google Storage written using the wxPython and Boto libraries
 
 Author: R Raviprakash<ravi87@gmail.com>
+Website: http://cs.ucsb.edu/~raviprakash/
 
 Features:
 - Lists all buckets and objects in each bucket

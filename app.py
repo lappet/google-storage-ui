@@ -68,6 +68,7 @@ class MyFrame(wx.Frame):
 		#The Object/File list 
                 self.fileList = wx.ListCtrl(parent=self,size=(400,100),pos=wx.Point(210,5))
 		self.fileList.InsertColumn(0,"Objects")
+		self.fileList.SetToolTip(wx.ToolTip("Right click for options"))
 		#self.fileList.Bind(wx.EVT_LIST_ITEM_SELECTED,self.OnDownload)
 		self.fileList.Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK,self.OnRightClickForObjectList)
 

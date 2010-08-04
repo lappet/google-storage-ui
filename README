@@ -1,4 +1,6 @@
-A graphical user interface(GUI) for Google Storage written using the wxPython and Boto libraries
+GSBrowser: A graphical user interface(GUI) for Google Storage written using the wxPython and Boto libraries
+
+Author: R Raviprakash<ravi87@gmail.com>
 
 Features:
 - Lists all buckets and objects in each bucket
@@ -12,6 +14,8 @@ TODO:
 - Download entire buckets
 - Display information for each object
 - Only tested on Linux(Lucid Lynx) and Windows(Vista) so far
+- Get/Set ACLs
+- Add ability to Drag & Drop files
 
 INSTRUCTIONS:
 - You should have Python, wxPython and the latest version of boto installed

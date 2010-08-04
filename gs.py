@@ -41,7 +41,7 @@ def getBuckets():
 			bucket_list.append(bucket.name)
 		return bucket_list
 	except StandardError, e:
-		pass
+		print e
 
 def getObjects(bucketname):
 	"""Get objects in specified bucketname"""
@@ -119,4 +119,15 @@ def download(bucketname,objectname,directory, cb = callBack):
 				break
 	k.get_contents_to_filename(os.path.join(directory,objectname),None,cb)
 
+
+def getObjectInfo(bucket,objectName):
+	uri = boto.storage_uri(bucket,"gs")
+	objs = uri.get_bucket()
+	k = None
+	if objs:
+		for obj in objs:
+			if obj.name == objectName:
+				k=obj
+				break
+	return [k.name,k.size,k.last_modified]
 

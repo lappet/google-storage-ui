@@ -30,7 +30,6 @@ class BotoSettings(wx.Dialog):
 
 	def OnShow(self,event):
 		self.LoadConfig()
-		print "heha"
 	
 	def LoadConfig(self):
 		path = os.path.join(sys.path[0],"config")
@@ -41,15 +40,13 @@ class BotoSettings(wx.Dialog):
 	def OnUpdate(self,event):
 		k = wx.MessageDialog(self,"If you select Yes, your config file will be modified, but you can see the impact only when you restart the application. Are you sure you want to proceed?","GS",wx.YES_NO)
 		if k.ShowModal() == wx.ID_YES:
-			print "Yes"
 			data = self.botoPath.GetValue()
 			path = os.path.join(sys.path[0],"config")
 			f = open(path,"w")
 			f.write(data)
 			self.Show(False)
 			self.LoadConfig()
-		else:
-			print "No"
+
 
 
 class MyFrame(wx.Frame):
@@ -146,7 +143,6 @@ class MyFrame(wx.Frame):
 		currentPosition = wx.Point(event.GetPoint().x,event.GetPoint().y)
 		self.PopupMenu(popupMenu, currentPosition)
 		popupMenu.Destroy()
-		print event.GetText()
 
 	def OnCreateBucket(self,event):
 		inputBox = wx.TextEntryDialog(self,"Enter the name of the bucket","GS")
@@ -176,14 +172,17 @@ class MyFrame(wx.Frame):
 	        menuItem = popupMenu.Append(wx.ID_ANY,"Delete","Delete this object")
 	        self.Bind(wx.EVT_MENU,lambda evt, temp=selectedItems: self.OnDelete(evt, temp),menuItem)
 		menuItem = popupMenu.Append(wx.ID_ANY,"Get Info","Get meta data")
-		self.Bind(wx.EVT_MENU,self.OnInfo,menuItem)
+		self.Bind(wx.EVT_MENU,lambda evt, temp=selectedItems: self.OnInfo(evt, temp),menuItem)
 		currentPosition = wx.Point(event.GetPoint().x+200,event.GetPoint().y)
 		self.PopupMenu(popupMenu, currentPosition)
 		popupMenu.Destroy()
-		print "You right clicked!"
 
-	def OnInfo(self,event):
-		print "on info"
+	def OnInfo(self,event,fileNameList):
+		for fname in fileNameList:
+			bucketName = self.GetSelectedItems(self.bktList)[0]
+			info = gs.getObjectInfo(bucketName,fname)
+			data = ""+"Name:"+info[0]+"\nSize in bytes:"+str(info[1])+"\nLast Modified:"+info[2]
+			wx.MessageBox(data,"Info")
 	
 	def OnDelete(self,event,fileNameList):
 		 msgBox = wx.MessageDialog(self,"Are you sure you want to delete these object(s)?\n"+helper.list2str(fileNameList),"GS",wx.YES_NO)
@@ -226,9 +225,7 @@ class MyFrame(wx.Frame):
 		self.SetCursor(busyCursor)
 		for item in selections:
 			k = self.dir_tree.GetItemData(item)
-			print "Text:", self.dir_tree.GetItemText(item)
 		        path= self.dirCtrl.GetDirItemData(item).m_path
-			print path
 			if os.path.isdir(path)==False: #if its not a directory, simply append the path
 				filesToUpload.append(path)
 			else: #if its a directory, upload all the files in the directory

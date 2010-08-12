@@ -131,3 +131,12 @@ def getObjectInfo(bucket,objectName):
 				break
 	return [k.name,k.size,k.last_modified]
 
+
+def getBucketSize(bucketName):
+	uri = boto.storage_uri(bucketName,"gs")
+	objs = uri.get_bucket()
+	size = 0
+	if objs:
+		for obj in objs:
+			size = size + obj.size
+	return size

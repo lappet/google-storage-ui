@@ -10,7 +10,12 @@ def callBack(trans,total):
 	print trans,total	
 
 def createBucket(bucketName):
-	"""Create  a new bucket"""
+	"""Create  a new bucket
+
+	Args: bucketName - name of bucket
+	Returns: always a tuple. 
+		(0,"Successfully created") if bucket has been created.
+		(error code, reason for error) if bucket creation fails"""	
 	try:
 		bucket_uri = boto.storage_uri(bucketName,"gs")
 		bucket_uri.create_bucket()
@@ -19,7 +24,10 @@ def createBucket(bucketName):
 		return (e.code,e.reason)
 
 def deleteBucket(bucketName):
-	"Delete a specified bucket"""
+	"""Delete a specified bucket
+
+	Args: bucketName - name of bucket
+	Returns: (0,"Successfully deleted") if bucket has been created. """
 	try:
 		bucket_uri = boto.storage_uri(bucketName,"gs")
 		objs = bucket_uri.get_bucket()
@@ -27,6 +35,7 @@ def deleteBucket(bucketName):
 			for obj in objs:
 				obj.delete()
 		bucket_uri.delete_bucket()
+		return (0,"Successfully deleted!")
 	except StandardError, e:
 		return (e.code,e.reason)
 
@@ -45,12 +54,15 @@ def getBuckets():
 
 def getObjects(bucketname):
 	"""Get objects in specified bucketname"""
-        uri = boto.storage_uri(bucketname,"gs")
-        objs = uri.get_bucket()
-        file_list = []
-        for obj in objs:
-                file_list.append(obj.name)
-        return file_list
+	try:
+		uri = boto.storage_uri(bucketname,"gs")
+		objs = uri.get_bucket()
+		file_list = []
+		for obj in objs:
+			file_list.append(obj.name)
+		return file_list
+	except StandardError, e:
+		return (e.code,e.reason)
 
 def downloadObject(bucketname,objname,dest_dir,cb=callBack):
 	"""Download a specific object from an exising bucket into a specified directory"""
@@ -121,6 +133,8 @@ def download(bucketname,objectname,directory, cb = callBack):
 
 
 def getObjectInfo(bucket,objectName):
+	"""Gets information about an object
+	   Returns: Name, Size and LastModified timestamp of object"""
 	uri = boto.storage_uri(bucket,"gs")
 	objs = uri.get_bucket()
 	k = None
@@ -133,6 +147,7 @@ def getObjectInfo(bucket,objectName):
 
 
 def getBucketSize(bucketName):
+	"""Gets bucket size"""
 	uri = boto.storage_uri(bucketName,"gs")
 	objs = uri.get_bucket()
 	size = 0

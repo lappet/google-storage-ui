@@ -12,10 +12,9 @@ import helper
 
 
 class BotoSettings(wx.Dialog):
-	"""A Class for the boto config"""
+	"""The Class for the boto config"""
 
 	def __init__(self,parent,title):
-		"""This class is for the BotoSettings Dialog box. You can set the path of the boto.config file"""
 		#Initial stuff
 		wx.Dialog.__init__(self,parent,title=title,size=(600,250))
 		self.Bind(wx.EVT_SHOW,self.OnShow)
@@ -146,6 +145,7 @@ class MyFrame(wx.Frame):
 		popupMenu.Destroy()
 
 	def OnCreateBucket(self,event):
+		"""Creates new bucket"""
 		inputBox = wx.TextEntryDialog(self,"Enter the name of the bucket","GS")
 		if inputBox.ShowModal() == wx.ID_OK:
 			bucketName = inputBox.GetValue()
@@ -157,6 +157,7 @@ class MyFrame(wx.Frame):
 			
 
 	def OnDeleteBucket(self,event,bucketName):
+		"""Deletes an exising bucket"""
 		k = wx.MessageDialog(self,"If the bucket is not empty, this will empty the contents of the bucket too. Are you sure you want to proceed?","GS",wx.YES_NO)
 		if k.ShowModal() == wx.ID_YES:
 			gs.deleteBucket(bucketName)
@@ -179,6 +180,7 @@ class MyFrame(wx.Frame):
 		popupMenu.Destroy()
 
 	def OnInfo(self,event,fileNameList):
+		"""Displays information about an object"""
 		for fname in fileNameList:
 			bucketName = self.GetSelectedItems(self.bktList)[0]
 			info = gs.getObjectInfo(bucketName,fname)
@@ -186,6 +188,7 @@ class MyFrame(wx.Frame):
 			wx.MessageBox(data,"Info")
 	
 	def OnDelete(self,event,fileNameList):
+		"""Delete(s) object(s)"""
 		 msgBox = wx.MessageDialog(self,"Are you sure you want to delete these object(s)?\n"+helper.list2str(fileNameList),"GS",wx.YES_NO)
 		 if msgBox.ShowModal() == wx.ID_NO:
 			return
@@ -197,6 +200,7 @@ class MyFrame(wx.Frame):
 		 self.StatusBar.SetStatusText("Done!")	
 		
 	def OnDownload(self,event,fileNameList):
+		"""Downloads object(s)"""
 		bucketName = self.GetSelectedItems(self.bktList)[0]
 		dlg = wx.DirDialog(self, message="Pick a directory")
 		if dlg.ShowModal() != wx.ID_CANCEL:		
@@ -217,6 +221,7 @@ class MyFrame(wx.Frame):
 		dlg.Destroy()
 
 	def OnUpload(self,event):
+		"""Uploads object(s)/directory(ies)"""
 		bucketName = self.GetSelectedItems(self.bktList)[0]
 		selections = self.dir_tree.GetSelections()
 		filesToUpload = []
@@ -255,10 +260,12 @@ class MyFrame(wx.Frame):
                 self.OnListBox(event)
 		
 	def OnRefresh(self,event):
+		"""Refreshes current bucket's contents"""
 		self.fileList.DeleteAllItems()
 	        self.OnListBox(event)
 
 	def OnExit(self,event):
+		"""Kill the app & exit"""
 		app.Exit()
 
 status = helper.ping()

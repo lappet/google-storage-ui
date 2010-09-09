@@ -10,7 +10,6 @@ import wx
 import gs
 import helper
 
-
 class BotoSettings(wx.Dialog):
 	"""The Class for the boto config"""
 
@@ -54,6 +53,8 @@ class MyFrame(wx.Frame):
 		#Initial stuff
                 self.botoFrame = BotoSettings(None,"BotoSettings")
 		wx.Frame.__init__(self,parent,title=title,size=(700,600))
+		self.DragAcceptFiles(True)
+		self.Bind(wx.EVT_DROP_FILES,self.OnDrop) #Bind OnDrop to handle dropped files
                
 		#The Bucket List
 		self.bktList = wx.ListCtrl(parent=self,style=wx.LC_REPORT|wx.SUNKEN_BORDER,size=(200,100),pos=wx.Point(5,5))
@@ -116,6 +117,30 @@ class MyFrame(wx.Frame):
 			item = listCtrl.GetItem(index,0)
 			names.append(item.GetText())
 		return names
+
+	def OnDrop(self,event):
+		"""Handles files which are dropped into GSBrowser; prompts a message box and uploads the files accordingly"""
+		fileNames = event.GetFiles()
+		msgBox = wx.MessageDialog(self,helper.list2str(fileNames),"Are you sure you want to upload these files?",wx.YES_NO)
+		if msgBox.ShowModal() == wx.ID_NO:
+                         return
+		else:
+			bucketName = self.GetSelectedItems(self.bktList)[0]
+			self.StatusBar.SetStatusText("Uploading...")
+	                normalCursor = self.GetCursor()
+        	        busyCursor = wx.StockCursor(wx.CURSOR_WAIT)
+                	self.SetCursor(busyCursor)
+			for fname in fileNames:
+				pdlg = wx.ProgressDialog(fname,"FileUpload",maximum=os.path.getsize(fname))
+				pdlg.SetSize((400,100))
+				def update(m,n):
+					pdlg.Update(m,str(100*m/n)+ "% done")
+				gs.uploadObject(bucketName,fname,update)
+			self.StatusBar.SetStatusText("Done!")
+        	        self.SetCursor(normalCursor)
+	                #refresh
+                	self.OnListBox(event)
+
 
 
 	def OnAbout(self,event):
@@ -188,10 +213,10 @@ class MyFrame(wx.Frame):
 			wx.MessageBox(data,"Info")
 	
 	def OnDelete(self,event,fileNameList):
-		"""Delete(s) object(s)"""
+		 """Delete(s) object(s)"""
 		 msgBox = wx.MessageDialog(self,"Are you sure you want to delete these object(s)?\n"+helper.list2str(fileNameList),"GS",wx.YES_NO)
 		 if msgBox.ShowModal() == wx.ID_NO:
-			return
+		 	return
 		 bucketName = self.GetSelectedItems(self.bktList)[0]
 		 self.StatusBar.SetStatusText("Deleting object "+str(fileNameList)+" in bucket "+bucketName)
 		 gs.deleteObjects(bucketName,fileNameList)

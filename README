@@ -12,12 +12,13 @@ Features:
 - Progress bars for upload & download
 - Display information for each object
 - Get size of a bucket
+- Drag & Drop! You can drag & drop files into GSBrowser to upload them
 
 TODO:
 - Download entire buckets
 - Only tested on Linux(Lucid Lynx) and Windows(Vista) so far...any volunteers for other operating systems?
 - Get/Set ACLs
-- Add ability to Drag & Drop files
+- Add ability to Drag & Drop files(ongoing)
 - Add support for Proxy
 
 INSTRUCTIONS:
